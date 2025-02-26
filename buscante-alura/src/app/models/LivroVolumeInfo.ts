@@ -1,4 +1,4 @@
-import { ImageLinks } from "./Interfaces";
+import { ImageLinks, Item } from "./Interfaces";
 
 export class LivroVolumeInfo {
     title?: string;
@@ -19,3 +19,8 @@ export class LivroVolumeInfo {
         this.thumbnail = item.volumeInfo?.imageLinks?.thumbnail
     }
 }
+
+export interface LivrosResultado {
+    items: Item[];
+    totalItems: number;
+  }

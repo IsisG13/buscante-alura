@@ -6,11 +6,12 @@ import {
   EMPTY,
   filter,
   map,
+  of,
   switchMap,
   tap,
   throwError,
 } from 'rxjs';
-import { Item } from 'src/app/models/Interfaces';
+import { Item, LivrosResultado } from 'src/app/models/Interfaces';
 import { LivroVolumeInfo } from 'src/app/models/LivroVolumeInfo';
 import { LivroService } from 'src/app/service/livro.service';
 
@@ -23,8 +24,21 @@ const PAUSA = 300;
 export class ListaLivrosComponent {
   campoBusca = new FormControl();
   mensagemErro: string = '';
+  livrosResultado: LivrosResultado;
 
   constructor(private service: LivroService) {}
+
+  totalDeLivros$ = this.campoBusca.valueChanges.pipe(
+    debounceTime(PAUSA),
+    filter((valorDigitado) => valorDigitado.length >= 3),
+    tap(() => console.log('fluxo inicial')),
+    switchMap((valorDigitado) => this.service.buscar(valorDigitado)),
+    map((resultado) => this.livrosResultado = resultado),
+    catchError((erro) => {
+      console.log(erro);
+      return of();
+    })
+  )
 
   livrosEncontrados$ = this.campoBusca.valueChanges.pipe(
     debounceTime(PAUSA),
@@ -32,10 +46,11 @@ export class ListaLivrosComponent {
     tap(() => console.log('fluxo inicial')),
     switchMap((valorDigitado) => this.service.buscar(valorDigitado)),
     tap((retornoAPI) => console.log(retornoAPI)),
+    map(resultado => resultado.items ?? []),
     map((items) => this.livroResultadoParaLivros(items)),
-    catchError(() => {
-      this.mensagemErro= 'Ops... Ocorreu um erro, recarregue a página'
-      return EMPTY
+    catchError((erro) => {
+      console.log(erro);
+      return throwError(() => new Error(this.mensagemErro = 'Opa, ocorreu um error!'));
     })
   );
 
